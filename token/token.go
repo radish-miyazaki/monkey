@@ -32,7 +32,7 @@ const (
 	LT = "<"
 	// GT は大なり演算子を示します。
 	GT = ">"
-	// COMMA はカンマを示します。
+	//COMMA はカンマを示します。
 	COMMA = ","
 	// SEMICOLON はセミコロンを示します。
 	SEMICOLON = ";"
@@ -48,11 +48,26 @@ const (
 	FUNCTION = "function"
 	// LET は変数束縛を示します。
 	LET = "let"
+	// IF は条件分岐を示します。
+	IF = "if"
+	// ELSE は条件分岐のそれ以外を示します。
+	ELSE = "else"
+	// TRUE は真を示します。
+	TRUE = "true"
+	// FALSE は偽を示します。
+	FALSE = "false"
+	// RETURN は戻り値を示します。
+	RETURN = "return"
 )
 
 var keywords = map[string]TokenType{
-	"fn":  FUNCTION,
-	"let": LET,
+	"fn":     FUNCTION,
+	"let":    LET,
+	"true":   TRUE,
+	"false":  FALSE,
+	"if":     IF,
+	"else":   ELSE,
+	"return": RETURN,
 }
 
 func LookupIdent(ident string) TokenType {
