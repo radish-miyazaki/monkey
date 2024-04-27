@@ -31,6 +31,17 @@ func (ls *LetStatement) TokenLiteral() string {
 	return ls.Token.Literal
 }
 
+type ReturnStatement struct {
+	Token       token.Token
+	ReturnValue Expression
+}
+
+func (rs *ReturnStatement) statementNode() {}
+
+func (rs *ReturnStatement) TokenLiteral() string {
+	return rs.Token.Literal
+}
+
 // Identifier は識別子を表すASTノード
 // 本来 let 文の識別子は値を生成しないが、ノードの種類を少なくするために Expression を実装している
 type Identifier struct {
