@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/radish-miyazaki/monkey/evaluator"
 	"github.com/radish-miyazaki/monkey/lexer"
 	"github.com/radish-miyazaki/monkey/parser"
 	"github.com/radish-miyazaki/monkey/token"
@@ -32,8 +33,11 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		_, _ = io.WriteString(out, program.String())
-		_, _ = io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			_, _ = io.WriteString(out, evaluated.Inspect())
+			_, _ = io.WriteString(out, "\n")
+		}
 
 		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
 			fmt.Printf("%+v\n", tok)
