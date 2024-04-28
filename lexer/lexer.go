@@ -128,7 +128,7 @@ func (l *Lexer) peekChar() byte {
 	return l.input[l.readPosition]
 }
 
-func newToken(tokenType token.TokenType, ch byte) token.Token {
+func newToken(tokenType token.Type, ch byte) token.Token {
 	return token.Token{
 		Type:    tokenType,
 		Literal: string(ch),
