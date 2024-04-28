@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/radish-miyazaki/monkey/ast"
 	"github.com/radish-miyazaki/monkey/lexer"
@@ -40,6 +41,7 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefixParseFn(token.IDENT, p.parseIdentifier)
+	p.registerPrefixParseFn(token.INT, p.parseIntegerLiteral)
 
 	// 2 つのトークンを読み込み、curToken と peekToken にセット
 	p.nextToken()
@@ -173,4 +175,18 @@ func (p *Parser) registerPrefixParseFn(tokenType token.TokenType, fn prefixParse
 
 func (p *Parser) registerInfixParseFn(tokenType token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	lit := &ast.IntegerLiteral{Token: p.curToken}
+
+	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	lit.Value = value
+
+	return lit
 }
