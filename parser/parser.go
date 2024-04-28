@@ -59,6 +59,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfixParseFn(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfixParseFn(token.LT, p.parseInfixExpression)
 	p.registerInfixParseFn(token.GT, p.parseInfixExpression)
+	p.registerInfixParseFn(token.LPAREN, p.parseCallExpression)
 
 	// 2 つのトークンを読み込み、curToken と peekToken にセット
 	p.nextToken()
@@ -186,7 +187,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	leftExp := prefix()
 
-	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekProcedence() {
+	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
@@ -236,7 +237,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 		Left:     left,
 	}
 
-	precedence := p.curProcedence()
+	precedence := p.curPrecedence()
 	p.nextToken()
 	expression.Right = p.parseExpression(precedence)
 
@@ -333,16 +334,18 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	var identifiers []*ast.Identifier
 
+	// 引数が空の場合
 	if p.peekTokenIs(token.RPAREN) {
 		p.nextToken()
 		return identifiers
 	}
 
+	// 1 個目の引数
 	p.nextToken()
-
 	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 	identifiers = append(identifiers, ident)
 
+	// 2 個目以降の引数
 	for p.peekTokenIs(token.COMMA) {
 		p.nextToken()
 		p.nextToken()
@@ -355,6 +358,39 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	}
 
 	return identifiers
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	exp := &ast.CallExpression{Token: p.curToken, Function: function}
+	exp.Arguments = p.parseCallArguments()
+	return exp
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	var args []ast.Expression
+
+	// 引数が空の場合
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		return args
+	}
+
+	// 1 個目の引数
+	p.nextToken()
+	args = append(args, p.parseExpression(LOWEST))
+
+	// 2 個目以降の引数
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return args
 }
 
 // Errors
@@ -379,9 +415,10 @@ var precedences = map[token.TokenType]int{
 	token.MINUS:    SUM,
 	token.ASTERISK: PRODUCT,
 	token.SLASH:    PRODUCT,
+	token.LPAREN:   CALL,
 }
 
-func (p *Parser) peekProcedence() int {
+func (p *Parser) peekPrecedence() int {
 	if p, ok := precedences[p.peekToken.Type]; ok {
 		return p
 	}
@@ -389,7 +426,7 @@ func (p *Parser) peekProcedence() int {
 	return LOWEST
 }
 
-func (p *Parser) curProcedence() int {
+func (p *Parser) curPrecedence() int {
 	if p, ok := precedences[p.curToken.Type]; ok {
 		return p
 	}
