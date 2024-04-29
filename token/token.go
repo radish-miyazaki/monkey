@@ -50,6 +50,8 @@ const (
 	RBRACE = "}"
 	// FUNCTION は関数を示します。
 	FUNCTION = "function"
+	// STRING は文字列リテラルを示します。
+	STRING = "string"
 	// LET は変数束縛を示します。
 	LET = "let"
 	// IF は条件分岐を示します。
