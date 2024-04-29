@@ -17,6 +17,7 @@ const (
 	PRODUCT     // *
 	PREFIX      // -X または !X
 	CALL        // myFunction(X)
+	INDEX       // array[index]
 )
 
 type (
@@ -50,6 +51,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefixParseFn(token.IF, p.parseIfExpression)
 	p.registerPrefixParseFn(token.FUNCTION, p.parseFunctionLiteral)
 	p.registerPrefixParseFn(token.STRING, p.parseStringLiteral)
+	p.registerPrefixParseFn(token.LBRACKET, p.parseArrayLiteral)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfixParseFn(token.PLUS, p.parseInfixExpression)
@@ -61,6 +63,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfixParseFn(token.LT, p.parseInfixExpression)
 	p.registerInfixParseFn(token.GT, p.parseInfixExpression)
 	p.registerInfixParseFn(token.LPAREN, p.parseCallExpression)
+	p.registerInfixParseFn(token.LBRACKET, p.parseIndexExpression)
 
 	// 2 つのトークンを読み込み、curToken と peekToken にセット
 	p.nextToken()
@@ -340,6 +343,41 @@ func (p *Parser) parseStringLiteral() ast.Expression {
 	return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
 }
 
+func (p *Parser) parseArrayLiteral() ast.Expression {
+	array := &ast.ArrayLiteral{Token: p.curToken}
+
+	array.Elements = p.parseExpressionList(token.RBRACKET)
+
+	return array
+}
+
+func (p *Parser) parseExpressionList(end token.Type) []ast.Expression {
+	var list []ast.Expression
+
+	// 要素が 0 個の場合
+	if p.peekTokenIs(end) {
+		p.nextToken()
+		return list
+	}
+
+	// 1 個目の要素
+	p.nextToken()
+	list = append(list, p.parseExpression(LOWEST))
+
+	// 2 個目以降の要素
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		list = append(list, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(end) {
+		return nil
+	}
+
+	return list
+}
+
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	var identifiers []*ast.Identifier
 
@@ -371,35 +409,21 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	exp := &ast.CallExpression{Token: p.curToken, Function: function}
-	exp.Arguments = p.parseCallArguments()
+	exp.Arguments = p.parseExpressionList(token.RPAREN)
 	return exp
 }
 
-func (p *Parser) parseCallArguments() []ast.Expression {
-	var args []ast.Expression
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	exp := &ast.IndexExpression{Token: p.curToken, Left: left}
 
-	// 引数が空の場合
-	if p.peekTokenIs(token.RPAREN) {
-		p.nextToken()
-		return args
-	}
-
-	// 1 個目の引数
 	p.nextToken()
-	args = append(args, p.parseExpression(LOWEST))
+	exp.Index = p.parseExpression(LOWEST)
 
-	// 2 個目以降の引数
-	for p.peekTokenIs(token.COMMA) {
-		p.nextToken()
-		p.nextToken()
-		args = append(args, p.parseExpression(LOWEST))
-	}
-
-	if !p.expectPeek(token.RPAREN) {
+	if !p.expectPeek(token.RBRACKET) {
 		return nil
 	}
 
-	return args
+	return exp
 }
 
 // Errors
@@ -425,6 +449,7 @@ var precedences = map[token.Type]int{
 	token.ASTERISK: PRODUCT,
 	token.SLASH:    PRODUCT,
 	token.LPAREN:   CALL,
+	token.LBRACKET: INDEX,
 }
 
 func (p *Parser) peekPrecedence() int {

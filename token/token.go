@@ -48,6 +48,10 @@ const (
 	LBRACE = "{"
 	// RBRACE は右波括弧を示します。
 	RBRACE = "}"
+	// LBRACKET は左角括弧を示します。
+	LBRACKET = "["
+	// RBRACKET は右角括弧を示します。
+	RBRACKET = "]"
 	// FUNCTION は関数を示します。
 	FUNCTION = "function"
 	// STRING は文字列リテラルを示します。
