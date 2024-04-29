@@ -16,6 +16,7 @@ const (
 	ERROR_OBJ        = "ERROR"
 	FUNCTION_OBJ     = "FUNCTION"
 	STRING_OBJ       = "STRING"
+	BUILTIN_OBJ      = "BUILTIN"
 )
 
 type Type string
@@ -89,3 +90,10 @@ type Error struct {
 
 func (e *Error) Type() Type      { return ERROR_OBJ }
 func (e *Error) Inspect() string { return "ERROR: " + e.Message }
+
+type Builtin struct {
+	Fn func(args ...Object) Object
+}
+
+func (b *Builtin) Type() Type      { return BUILTIN_OBJ }
+func (b *Builtin) Inspect() string { return "builtin function" }
