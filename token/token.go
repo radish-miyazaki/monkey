@@ -70,6 +70,8 @@ const (
 	FALSE = "false"
 	// RETURN は戻り値を示します。
 	RETURN = "return"
+	// MACRO はマクロを示します。
+	MACRO = "MACRO"
 )
 
 var keywords = map[string]Type{
@@ -80,6 +82,7 @@ var keywords = map[string]Type{
 	"if":     IF,
 	"else":   ELSE,
 	"return": RETURN,
+	"macro":  MACRO,
 }
 
 func LookupIdent(ident string) Type {
