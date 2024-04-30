@@ -40,6 +40,8 @@ const (
 	COMMA = ","
 	// SEMICOLON はセミコロンを示します。
 	SEMICOLON = ";"
+	// COLON はコロンを示します。
+	COLON = ":"
 	// LPAREN は左括弧を示します。
 	LPAREN = "("
 	// RPAREN は右括弧を示します。
